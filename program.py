@@ -17,6 +17,8 @@ icon file_name last_modification_time file_size open_url description
 It is designed to look like the output of apache web server.
 """
 
+from __future__ import (absolute_import, division, print_function)
+
 import os
 import re
 import utils
@@ -136,14 +138,14 @@ def create_index_html(root):
                 write_to_disk(rendered_template, index_html)
                 total_generated_index_htmls += 1
         except IOError as error:
-            print error
+            print(error)
 
         total_processed_dirs += len(dirs)
         total_processed_files += len(files)
 
     total_processed_items = total_processed_dirs + total_processed_files
-    print "Total processed files and directories: {count}".format(count = total_processed_items)
-    print "Total index.html files generated: {count}".format(count = total_generated_index_htmls)
+    print("Total processed files and directories: {count}".format(count = total_processed_items))
+    print("Total index.html files generated: {count}".format(count = total_generated_index_htmls))
 
 
 def filter_names(dirnames, filenames):
@@ -224,7 +226,7 @@ def write_to_disk(template, destination):
 
 
 def main():
-    print "Static HTML file browser for Dropbox"
+    print("Apache web-server style static HTML file generator.")
 
     parser = argparse.ArgumentParser()
 

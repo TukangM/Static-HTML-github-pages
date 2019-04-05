@@ -1,7 +1,7 @@
+from __future__ import (absolute_import, division, print_function)
 import os
 import config
 from shutil import copytree, rmtree
-
 
 def is_answer_yes(answer):
     """Returns True if answer is yes, False otherwise"""
@@ -17,7 +17,7 @@ def ask_yes_no_question(question):
     try:
         result = raw_input(question + " (yes/no) ")
     except (EOFError, KeyboardInterrupt):
-        print   # prints a new line
+        print()   # prints a new line
         exit(1) # terminates the program
     return result
 
@@ -37,28 +37,28 @@ def install(path_to_public_directory):
 
     # before the installation you have to set up your own config.py configuration
     if not is_config_already_set_up():
-        print "Before running this program, you have to edit config.py with a text editor!"
+        print("Before running this program, you have to edit config.py with a text editor!")
         exit(0)
 
     # checking for resources to be installed
     # if icons are missing, we have nothing to install
     if not os.path.isdir("icons"):
-        print "Cannot find local icons folder!"
+        print("Cannot find local icons folder!")
         exit(1)
 
     # if destination directory exists, ask user what to do: overwrite or exit
     if os.path.isdir(destination):
         question = "Would you like to overwrite " + destination + " directory?"
         if is_answer_yes(ask_yes_no_question(question)):
-            print "Removing " + destination
+            print("Removing " + destination)
             rmtree(destination)
         else:
-            print "No changes were made on the disk! Exiting..."
+            print("No changes were made on the disk! Exiting...")
             return
 
-    print "Copying resources to " + destination
+    print("Copying resources to " + destination)
     copytree("icons", destination)
-    print "Installation successfully finished! Now check your " + destination + " folder!"
+    print("Installation successfully finished! Now check your " + destination + " folder!")
 
 
 def mark_to_delete(path_to_starting_directory, file_to_remove):
@@ -79,7 +79,7 @@ def cleanup(path_to_starting_directory):
     This function removes the generated index.html files from path_to_starting_directory
     """
 
-    print "Cleaning up index.html and icon files..."
+    print("Cleaning up index.html and icon files...")
     files_to_remove = mark_to_delete(path_to_starting_directory, "index.html")
 
     # get icons to delete
@@ -91,12 +91,12 @@ def cleanup(path_to_starting_directory):
 
     number_of_files_to_remove = len(files_to_remove)
     if number_of_files_to_remove == 0:
-        print path_to_starting_directory + " already cleaned up. There is nothing to remove."
+        print(path_to_starting_directory + " already cleaned up. There is nothing to remove.")
         return
 
-    print "The following files will be removed:"
-    print "\n".join(files_to_remove)
-    print "You are going to remove {count} files.".format(count = number_of_files_to_remove)
+    print("The following files will be removed:")
+    print("\n".join(files_to_remove))
+    print("You are going to remove {count} files.".format(count = number_of_files_to_remove))
 
     # asking for user confirmation
     answer = ask_yes_no_question("Are you sure you want to continue? You cannot undo this operation!")
@@ -106,11 +106,11 @@ def cleanup(path_to_starting_directory):
 
         # remove icon's folder
         if os.path.exists(config.DROPBOX_ICON_FOLDER):
-            print "Removing " + config.DROPBOX_ICON_FOLDER
+            print("Removing " + config.DROPBOX_ICON_FOLDER)
             os.rmdir(config.DROPBOX_ICON_FOLDER)
-            print "Icon folder has been removed."
+            print("Icon folder has been removed.")
 
         # TODO: should look like this: number_of_removed_files / _number_of_files_to_remove
-        print "You have removed {count} files.".format(count = number_of_files_to_remove)
+        print("You have removed {count} files.".format(count = number_of_files_to_remove))
     else:
-        print "No files were removed!"
+        print("No files were removed!")
