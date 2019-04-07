@@ -1,6 +1,6 @@
 # CONFIGURATION FILE of Static HTML file browser for Dropbox
 
-DROPBOX_BASE_URL = "https://dl.dropboxusercontent.com/u/31525733"
+DROPBOX_BASE_URL = "https://example.com/"
 
 # this is a link to the icons directory
 DROPBOX_LINK_TO_ICONS = "{base}/icons".format(base=DROPBOX_BASE_URL)
@@ -11,6 +11,7 @@ HIDE_HIDDEN_ENTRIES = True      # default: True
 HIDE_INDEX_HTML_FILES = True    # default: True
 HIDE_ICONS_FOLDER = False       # default: True
 MONOSPACED_FONTS = True         # default: True
+OVERWRITE_ICON_FOLDER = True    # default: True
 SERVER_INFO = "Apache/2.4.18 at dropbox.com Port 80"
 
 #icons folder in your dropbox

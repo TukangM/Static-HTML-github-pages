@@ -1,13 +1,5 @@
 #!/usr/bin/env python2
 # encoding: utf-8
-
-# programmed by: Kiss Sándor Ádám
-# kisssandoradam@gmail.com
-# idea and a lots of help: Dr. Szathmáry László
-# Project started on 2013. december 13 midnight
-# University of Debrecen
-
-
 """
 This script generates index.html files to every directory and subdirectory
 starting from the specified directory. Every html file consist of a table
@@ -28,7 +20,6 @@ from unipath import Path
 from time import gmtime, strftime
 from jinja2 import Environment, FileSystemLoader
 
-
 TEMPLATE_ENVIRONMENT = Environment(autoescape=False,
                                    loader=FileSystemLoader('templates'),
                                    trim_blocks=False)
@@ -36,30 +27,31 @@ TEMPLATE_ENVIRONMENT = Environment(autoescape=False,
 
 def create_ipynb_link(filename):
     link = 'http://nbviewer.ipython.org/urls/'
-    
+
     if config.DROPBOX_BASE_URL.startswith('https://'):
         link = link + config.DROPBOX_BASE_URL[8:]
     elif config.DROPBOX_BASE_URL.startswith('http://'):
         link = link + config.DROPBOX_BASE_URL[7:]
-    
+
     findex = filename.find('Public')
-    link = link + filename[findex+6:]
-    
+    link = link + filename[findex + 6:]
+
     return link
 
 
 def get_open_url(filename):
+    # TODO: this should be updated to reflect correct external url
     link = []
-    
+
     if os.path.isfile(filename):
         ext = os.path.splitext(filename)[1]
-        if ext == '.ipynb' :
+        if ext == '.ipynb':
             link.append(create_ipynb_link(filename))
             link.append('nbview')
     else:
         link.append('')
         link.append('')
-    
+
     return link
 
 
@@ -98,15 +90,16 @@ def render_template(template_filename, context):
 
 
 def get_context(datas, root, current_directory, relpath):
+    # TODO: update to be completely offline (it seems only icon uses http link)
     return {
-        'datas' : datas,
-        'root' : root,
-        'current_directory' : current_directory,
-        'font' : ( "monospace" if config.MONOSPACED_FONTS else "" ),
-        'SHOW_SERVER_INFO' : config.SHOW_SERVER_INFO,
-        'server_info' : config.SERVER_INFO,
-        'index_of' : ("" if relpath == "." else relpath),
-        'link_to_icons' : config.DROPBOX_LINK_TO_ICONS
+        'datas': datas,
+        'root': root,
+        'current_directory': current_directory,
+        'font': ("monospace" if config.MONOSPACED_FONTS else ""),
+        'SHOW_SERVER_INFO': config.SHOW_SERVER_INFO,
+        'server_info': config.SERVER_INFO,
+        'index_of': ("" if relpath == "." else relpath),
+        'link_to_icons': config.DROPBOX_LINK_TO_ICONS
     }
 
 
@@ -119,22 +112,22 @@ def create_index_html(root):
 
     for dirpath, dirnames, filenames in os.walk(root):
         if config.HIDE_HIDDEN_ENTRIES and os.path.basename(dirpath).startswith("."):
-                continue
+            continue
         filter_names(dirnames, filenames)
 
         dirs = get_entries(dirpath, dirnames)
         files = get_entries(dirpath, filenames)
-        
-        context = get_context(datas = dirs + files,
-                              root = root,
-                              current_directory = dirpath,
-                              relpath = os.path.relpath(dirpath, root))
+
+        context = get_context(datas=dirs + files,
+                              root=root,
+                              current_directory=dirpath,
+                              relpath=os.path.relpath(dirpath, root))
 
         rendered_template = render_template('template.html', context)
         index_html = os.path.join(dirpath, "index.html")
-        
+
         try:
-            if file_differs_from_content(filename = index_html, content = rendered_template):
+            if file_differs_from_content(filename=index_html, content=rendered_template):
                 write_to_disk(rendered_template, index_html)
                 total_generated_index_htmls += 1
         except IOError as error:
@@ -144,41 +137,36 @@ def create_index_html(root):
         total_processed_files += len(files)
 
     total_processed_items = total_processed_dirs + total_processed_files
-    print("Total processed files and directories: {count}".format(count = total_processed_items))
-    print("Total index.html files generated: {count}".format(count = total_generated_index_htmls))
+    print("Total processed files and directories: {count}".format(count=total_processed_items))
+    print("Total index.html files generated: {count}".format(count=total_generated_index_htmls))
 
 
 def filter_names(dirnames, filenames):
+    """Filter files and directories based on config"""
     if config.HIDE_INDEX_HTML_FILES and "index.html" in filenames:
         filenames.remove("index.html")
-    
-    if config.HIDE_ICONS_FOLDER:
-        filter_icons_dir(dirnames)
 
-    if config.HIDE_HIDDEN_ENTRIES:
-        filter_hiddens(dirnames)
-        filter_hiddens(filenames)
-
-
-def filter_icons_dir(dirnames):
-    if "icons" in dirnames:
+    if config.HIDE_ICONS_FOLDER and "icons" in dirnames:
         dirnames.remove("icons")
 
+    if config.HIDE_HIDDEN_ENTRIES:
+        remove_hiddens(dirnames)
+        remove_hiddens(filenames)
 
-def filter_hiddens(names):
+
+def remove_hiddens(names):
     for name in names:
         if name.startswith("."):
             names.remove(name)
 
 
 def get_entries(dirpath, names):
+    """Returns Entry object for each element of names"""
     paths = []
-    
     for name in names:
         paths.append(get_entry(Path(dirpath, name)))
-    
+
     paths.sort()
-    
     return paths
 
 
@@ -190,7 +178,7 @@ def get_entry(path):
     size = sizeof_fmt(path.size())
     icon = get_icon_name(path)
     open_url = get_open_url(os.path.abspath(path))
-    
+
     if path.isdir():
         url = os.path.join(name, "index.html")
     else:
@@ -211,12 +199,12 @@ class Entry():
 
 def file_differs_from_content(filename, content):
     is_different = True
-    
+
     if os.path.exists(filename):
         with open(filename) as f:
             if f.read().strip() == content.strip():
                 is_different = False
-    
+
     return is_different
 
 
@@ -244,16 +232,23 @@ def main():
 
     args = parser.parse_args()
 
-    if args.install:
-        utils.install(args.location)
-        exit(0)
-
+    target_dir = os.path.realpath(args.location)
     if args.clean:
-        utils.cleanup(args.location)
+        utils.cleanup(target_dir)
         exit(0)
 
+    utils.install_icons(target_dir)
     create_index_html(args.location)
 
+
+# Todo: Add option to enable recursing into directories or not
+# Todo: Add option to run in daemon mode (eg from crontab repeatedly)
+# Todo: make basic stuff (everything except "Open" column) completely independent of http links
+# Todo: Remove mention of dropbox - it does not support html rendering anymore
+# Todo: Do not overwrite unless specifically configured (via flag or config)
+# Todo: Change icon folder name to something more uncommon on destination
+# Todo: Merge --install function to default usage
+# Todo:
 
 #############################################################################
 

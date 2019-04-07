@@ -3,6 +3,8 @@ import os
 import config
 from shutil import copytree, rmtree
 
+src_icon_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), 'icons'))
+
 def is_answer_yes(answer):
     """Returns True if answer is yes, False otherwise"""
 
@@ -28,37 +30,25 @@ def is_config_already_set_up():
     return is_answer_yes(ask_yes_no_question("Did you configured config.py?"))
 
 
-def install(path_to_public_directory):
-    """
-    This function is called, when we run the program with '-i' or '--install'
-    """
-
-    destination = os.path.join(path_to_public_directory, "icons")
-
-    # before the installation you have to set up your own config.py configuration
-    if not is_config_already_set_up():
-        print("Before running this program, you have to edit config.py with a text editor!")
-        exit(0)
+def install_icons(target_dir):
+    """Installs icons in target_dir"""
+    icon_destination = os.path.join(target_dir, "_icons")
 
     # checking for resources to be installed
     # if icons are missing, we have nothing to install
-    if not os.path.isdir("icons"):
-        print("Cannot find local icons folder!")
+    if not os.path.isdir(src_icon_dir):
+        print("Cannot find source icons folder: " + src_icon_dir)
         exit(1)
 
     # if destination directory exists, ask user what to do: overwrite or exit
-    if os.path.isdir(destination):
-        question = "Would you like to overwrite " + destination + " directory?"
-        if is_answer_yes(ask_yes_no_question(question)):
-            print("Removing " + destination)
-            rmtree(destination)
-        else:
-            print("No changes were made on the disk! Exiting...")
-            return
+    if os.path.isdir(icon_destination) and not config.OVERWRITE_ICON_FOLDER:
+        print("Skipping installing icons as icon folder already exists "
+              "and config.OVERWRITE_ICON_FOLDER is set to False")
+    else:
+        rmtree(icon_destination)
+        copytree(src_icon_dir, icon_destination)
 
-    print("Copying resources to " + destination)
-    copytree("icons", destination)
-    print("Installation successfully finished! Now check your " + destination + " folder!")
+    return icon_destination
 
 
 def mark_to_delete(path_to_starting_directory, file_to_remove):
@@ -73,6 +63,7 @@ def mark_to_delete(path_to_starting_directory, file_to_remove):
             files_to_remove.append(os.path.join(dirpath, file_to_remove))
 
     return files_to_remove
+
 
 def cleanup(path_to_starting_directory):
     """
