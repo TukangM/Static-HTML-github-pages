@@ -15,6 +15,7 @@ import os
 import re
 import utils
 import config
+import operator
 import argparse
 from unipath import Path
 from time import gmtime, strftime
@@ -90,7 +91,7 @@ def render_template(template_filename, context):
 
 
 def get_context(datas, root, current_directory, relpath):
-    # TODO: update to be completely offline (it seems only icon uses http link)
+    """returns the context dictionary, to be used by template.html"""
     return {
         'datas': datas,
         'root': root,
@@ -99,23 +100,30 @@ def get_context(datas, root, current_directory, relpath):
         'SHOW_SERVER_INFO': config.SHOW_SERVER_INFO,
         'server_info': config.SERVER_INFO,
         'index_of': ("" if relpath == "." else relpath),
-        'link_to_icons': config.DROPBOX_LINK_TO_ICONS
+        'link_to_icons': os.path.relpath(config.icon_dir, current_directory)
     }
 
 
-def create_index_html(root):
+def create_index_html(root, recurse=True):
     """Creates an index.html file in every directory and subdirectory."""
 
     total_processed_files = 0
     total_processed_dirs = 0
     total_generated_index_htmls = 0
 
+    depth_from_root = 0
     for dirpath, dirnames, filenames in os.walk(root):
+        if not recurse and depth_from_root > 0:
+            break
+
         if config.HIDE_HIDDEN_ENTRIES and os.path.basename(dirpath).startswith("."):
             continue
-        filter_names(dirnames, filenames)
 
-        dirs = get_entries(dirpath, dirnames)
+        filter_names(dirnames, filenames)
+        if recurse:
+            dirs = get_entries(dirpath, dirnames)
+        else:
+            dirs = []
         files = get_entries(dirpath, filenames)
 
         context = get_context(datas=dirs + files,
@@ -126,13 +134,13 @@ def create_index_html(root):
         rendered_template = render_template('template.html', context)
         index_html = os.path.join(dirpath, "index.html")
 
-        try:
-            if file_differs_from_content(filename=index_html, content=rendered_template):
-                write_to_disk(rendered_template, index_html)
-                total_generated_index_htmls += 1
-        except IOError as error:
-            print(error)
+        if os.path.exists(index_html):
+            print('Skipping as index.html already exist: ' + index_html)
+        else:
+            write_to_disk(rendered_template, index_html)
+            total_generated_index_htmls += 1
 
+        depth_from_root += 1
         total_processed_dirs += len(dirs)
         total_processed_files += len(files)
 
@@ -146,8 +154,8 @@ def filter_names(dirnames, filenames):
     if config.HIDE_INDEX_HTML_FILES and "index.html" in filenames:
         filenames.remove("index.html")
 
-    if config.HIDE_ICONS_FOLDER and "icons" in dirnames:
-        dirnames.remove("icons")
+    if config.HIDE_ICONS_FOLDER and config.TARGET_ICON_FOLDER_NAME in dirnames:
+        dirnames.remove(config.TARGET_ICON_FOLDER_NAME)
 
     if config.HIDE_HIDDEN_ENTRIES:
         remove_hiddens(dirnames)
@@ -166,12 +174,12 @@ def get_entries(dirpath, names):
     for name in names:
         paths.append(get_entry(Path(dirpath, name)))
 
-    paths.sort()
+    paths.sort(key=operator.attrgetter('name'))
     return paths
 
 
 def get_entry(path):
-    assert type(path) == Path, "path is not a Path object"
+    assert isinstance(path, Path), "path is not a Path object"
 
     name = path.name
     date = strftime("%Y-%m-%d&nbsp;%H:%M", gmtime(60 * 60 + path.mtime()))
@@ -215,40 +223,34 @@ def write_to_disk(template, destination):
 
 def main():
     print("Apache web-server style static HTML file generator.")
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument("location",
                         help="path to the Public folder of your Dropbox folder.")
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-i", "--install",
-                       action="store_true",
-                       help="prepares your Dropbox folder by copying icons to the specified directory.\
-                             This directory can be set up in config.py configuration file.")
-    group.add_argument("--clean",
-                       action="store_true",
-                       help="cleans your Dropbox directory by deleting index.html files.")
+    parser.add_argument("--clean",
+                        action="store_true",
+                        help="cleans your Dropbox directory by deleting index.html files.")
+
+    parser.add_argument("--no-recurse",
+                        action="store_true",
+                        help="Disables recursive traversal.")
 
     args = parser.parse_args()
 
     target_dir = os.path.realpath(args.location)
+    recurse = not args.no_recurse
+
     if args.clean:
         utils.cleanup(target_dir)
         exit(0)
 
-    utils.install_icons(target_dir)
-    create_index_html(args.location)
+    icon_dir = utils.install_icons(target_dir)
+    config.icon_dir = icon_dir  # make it available globally!
+    create_index_html(target_dir, recurse=recurse)
 
 
-# Todo: Add option to enable recursing into directories or not
-# Todo: Add option to run in daemon mode (eg from crontab repeatedly)
-# Todo: make basic stuff (everything except "Open" column) completely independent of http links
-# Todo: Remove mention of dropbox - it does not support html rendering anymore
-# Todo: Do not overwrite unless specifically configured (via flag or config)
-# Todo: Change icon folder name to something more uncommon on destination
-# Todo: Merge --install function to default usage
-# Todo:
+
 
 #############################################################################
 

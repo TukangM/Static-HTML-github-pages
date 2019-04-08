@@ -32,7 +32,7 @@ def is_config_already_set_up():
 
 def install_icons(target_dir):
     """Installs icons in target_dir"""
-    icon_destination = os.path.join(target_dir, "_icons")
+    icon_destination = os.path.join(target_dir, config.TARGET_ICON_FOLDER_NAME)
 
     # checking for resources to be installed
     # if icons are missing, we have nothing to install
@@ -45,7 +45,8 @@ def install_icons(target_dir):
         print("Skipping installing icons as icon folder already exists "
               "and config.OVERWRITE_ICON_FOLDER is set to False")
     else:
-        rmtree(icon_destination)
+        if os.path.isdir(icon_destination):
+            rmtree(icon_destination)
         copytree(src_icon_dir, icon_destination)
 
     return icon_destination

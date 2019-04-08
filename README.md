@@ -29,6 +29,17 @@ Installation
     ```python program.py ~/Dropbox/Public/```
 5. Try it out! Share the link of the index.html file which is in the root directory of Dropbox/Public folder. You can open it with a webbrowser or you can share it on the internet.
 
+Changes / to-do
+------------
+* Add option to enable recursing into directories or not
+* Add option to run in daemon mode (eg from crontab repeatedly)
+* make basic stuff (everything except "Open" column) completely independent of http links
+* Remove mention of dropbox - it does not support html rendering anymore
+* Do not overwrite unless specifically configured (via flag or config)
+* Change icon folder name to something more uncommon on destination
+* Merge --install function to default usage
+* When index.html, overwrite onlyif existing html was written by this program
+
 Contributors
 ----------------
 [Jabba Laci](https://github.com/jabbalaci)
