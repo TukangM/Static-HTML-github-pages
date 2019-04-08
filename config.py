@@ -41,4 +41,6 @@ extensions = {
     r'.tar': 'tar.gif'
 }
 
-icon_dir = ''  # used internally; do not modify
+# used internally; do not modify
+icon_dir = ''
+ignore_exts = []

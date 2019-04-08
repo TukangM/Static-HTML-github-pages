@@ -161,11 +161,12 @@ def filter_names(dirnames, filenames):
         remove_hiddens(dirnames)
         remove_hiddens(filenames)
 
+    for ext in config.ignore_exts:
+        filenames[:] = [x for x in filenames if not x.endswith(ext)]
 
-def remove_hiddens(names):
-    for name in names:
-        if name.startswith("."):
-            names.remove(name)
+
+def remove_hiddens(name_list):
+    name_list[:] = [x for x in name_list if not x.startswith(".")]
 
 
 def get_entries(dirpath, names):
@@ -222,9 +223,7 @@ def write_to_disk(template, destination):
 
 
 def main():
-    print("Apache web-server style static HTML file generator.")
-    parser = argparse.ArgumentParser()
-
+    parser = argparse.ArgumentParser(description="Apache web-server style static HTML file generator")
     parser.add_argument("location",
                         help="path to the Public folder of your Dropbox folder.")
 
@@ -236,10 +235,14 @@ def main():
                         action="store_true",
                         help="Disables recursive traversal.")
 
+    parser.add_argument('--ignore-exts', nargs='+', required=False,
+                        help='File extensions to ignore', default=[])
+
     args = parser.parse_args()
 
     target_dir = os.path.realpath(args.location)
     recurse = not args.no_recurse
+    config.ignore_exts = args.ignore_exts
 
     if args.clean:
         utils.cleanup(target_dir)

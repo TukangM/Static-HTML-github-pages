@@ -39,6 +39,7 @@ Changes / to-do
 * Change icon folder name to something more uncommon on destination
 * Merge --install function to default usage
 * When index.html, overwrite onlyif existing html was written by this program
+* Add option to ignore some extensions
 
 Contributors
 ----------------
