@@ -1,4 +1,4 @@
-Static HTML file browser for Dropbox
+Static HTML file browser for github pages
 ====================================
 
 Screenshot about output
@@ -11,9 +11,8 @@ This program can generate html files to every directory in your Dropbox/Public f
 
 Requirements
 -------------------
-* Dropbox account. If you don't have one, you can register here: https://db.tt/3La8trR
-* Linux (or Windows, but I can't give you any help how to use this program under Windows)
-* Python 2.7 interpreter (3.0 or newer versions may not work)
+* Linux
+* Python 3.x
 * The following modules must be installed:
   + jinja2
   + unipath
